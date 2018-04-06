@@ -18,11 +18,12 @@
             <script>
                   
                 function changeText() {
-                    if (document.getElementById("text1").value) {
-                        document.getElementById("text1").innerHTML = "<h1></h1>";
+                    var textVar = document.getElementById("text1");
+                    if (!(textVar.value && textVar)) {
+                        textVar.innerHTML = "<h1>Fight the Power!</h1>";
                     }
                     else {
-                        document.getElementById("text1").innerHTML = "<h1>Fight the Power!</h1>";
+                        textVar.innerHTML = "<h1></h1>";
                     }
                 }
 
