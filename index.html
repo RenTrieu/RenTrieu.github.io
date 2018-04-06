@@ -1,1 +1,35 @@
-Hello World
+<!DOCTYPE html>
+<html>
+      <title>Testing HTML</title>
+        <style>
+    #header1 {color: green}
+      </style>
+        <head>
+                <div id="header1">
+                          <h1>TESTING</h1>
+                              </div>
+                                </head>
+                                  <body>
+                                          <div id="text1">
+                                                  </div>
+                                                      <button onclick="changeText()">
+                                                                Click This To Change Text
+                                                                    </button>
+                                                                        <script>
+      
+      function changeText() {
+                document.getElementById("text1").innerHTML = "<h1>Text</h1>";
+                      }
+
+      function printWindow() {
+                window.alert("Filler Text");
+                      }
+      
+    </script>
+        <button onclick="printWindow()">
+                  Print Window
+                      </button>
+                        </body>
+</html>
+
+
