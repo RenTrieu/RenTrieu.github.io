@@ -18,7 +18,12 @@
             <script>
                   
                 function changeText() {
-                    document.getElementById("text1").innerHTML = "<h1>Fight the Power!</h1>";
+                    if (document.getElementById("text1").value == null) {
+                        document.getElementById("text1").innerHTML = "<h1>Fight the Power!</h1>";
+                    }
+                    else {
+                        document.getElementById("text1").innerHTML = "<h1></h1>";
+                    }
                 }
 
                 function printWindow() {
