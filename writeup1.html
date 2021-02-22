@@ -73,7 +73,9 @@
             <hr>
             </code></pre><h2 id="enumeration">Enumeration</h2>
             <hr>
-            <p>First, we begin with an nmap scan at the given IP (referred to later in commands/paths by "$IP"). We find that the following ports are open:</p>
+            <p>First, we begin with an nmap scan at the given IP (referred to later in commands/paths by "$IP").</p>
+            <pre><code>sudo nmap -sV -sC -O -A $IP -oA nmapOutput -vv</code></pre>
+            <p>We find that the following ports are open:</p>
             <h4 id="nmap">NMap</h4>
             <ul>
             <li>Port open at 21/tcp for FTP vsftpd 3.0.3</li>
@@ -81,6 +83,7 @@
             <li>Port open at 80/tcp for HTTP Apache httpd 2.4.29</li>
             </ul>
             <p>We can see that there's a webserver being run on port 80 (which we can confirm by viewing the ip in a browser). Thus, we can enumerate its directories using gobuster:</p>
+            <pre><code>gobuster dir -u http://$IP/ -o gobusterOutput.txt -w SecLists/Discovery/Web-Content/directory-list-2.3-medium.txt -x php,sh,txt,cgi,html,js,css,py</code></pre>
             <h4 id="gobuster">Gobuster</h4>
             <ul>
             <li>$IP/images</li>
