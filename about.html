@@ -39,7 +39,7 @@
             <a class="nav-link" href="index.html">Home</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="about.html">Man Page</a>
+            <a class="nav-link" href="about.html">About Me</a>
           </li>
         </ul>
       </div>
@@ -53,8 +53,8 @@
       <div class="row">
         <div class="col-lg-8 col-md-10 mx-auto">
           <div class="page-heading">
-            <h1>Man Page</h1>
-            <span class="subheading">Welcome to my man page! This is a quick write up on myself.</span>
+            <h1>About Me</h1>
+            <span class="subheading">Welcome to my manual page! This is a quick write up on myself.</span>
           </div>
         </div>
       </div>
@@ -65,7 +65,21 @@
   <div class="container">
     <div class="row">
       <div class="col-lg-8 col-md-10 mx-auto">
-        <p>Hello! My name is Darren. I am a UCSD alum with a background in physics and computer science. However, I'm particularly interested in Information Security. Here, you can find my write ups for CTFs as I upskill and make my way through the world.</p>
+        <p>Hello! My name is Darren. I am a UCSD alum with a background in physics and computer science. I'm currently looking to transition into Information Security. On this website, you can find my writeups for Walkthroughs and CTFs from TryHackMe that I will do from time to time.</p>
+        <h5>CryoEM Web App</h5>
+        <p>I've most recently been involved with Cryogenic Electron Microscopy research with Andres Leschziner in his <a href="https://andres-leschziner.squarespace.com/">lab</a>. I collaborated with Dr. Leschziner to create and outline a multi-process workflow that involved computing large distance and covariance protein matrices and then displaying the results on an rudimentary web application. The project is open source and can be found <a href="https://github.com/Tachycardia/CryoEMCovariance">here</a>.</p>
+        <h5>Simulations</h5>
+        <p>During my undergraduate studies, I coded CUDA N-Body simulations that modeled events such as Cartwheel galaxy collisions.</p>
+        <div class="fill-screen">
+            <img class="img-fit" src="img/galaxyANucleusAngledInvaderSim.gif">
+        </div>
+        <p>This involved generating N-body distributions for the various galaxies, appending velocities depending on how they were meant to collide, and then acting the gravitational forces upon each body for every simulated time step. Leapfrog integration was used to optimize the time steps and CUDA was also implemented to take advantage of multicore systems. The positions and velocities of each body at a given time step was serialized and then animated using Matplotlib and Python. The code can be found <a href="https://github.com/Tachycardia/PHYS141CartwheelB">here</a>.</p>
+        <h5>Robot</h5>
+        <p>I am also somewhat versed in electronics and hardware. One of the more "fun" projects that I worked on with a friend was building a small robot that could avoid obstacles, remember where they were, and retrace its steps...</p>        
+        <div class="fill-screen">
+            <img src="img/metalhead/metalheadSummary.gif" width="99%" height="99%">
+        </div>
+        <p>albeit not absolutely well. However, given our limited budget it turned out alright. We used IR sensors mounted to a 3D printed face plate in order to detect obstacles. To control behavior, we had an Arduino running some <a href="https://github.com/Tachycardia/metalheadArduino/">C++ code</a>. Unfortunately, the only chassis that we had access to ran off of regular DC motors as opposed to stepper motors so to measure the amount of distance traveled or degrees turned, we had to resort to counting the amount of time for which the motors were powered and careful calibration. This accounts for inconsistencies in the path that our robot "remembers".</p>
       </div>
     </div>
   </div>
